@@ -1,5 +1,23 @@
 [build]
 builder = "nixpacks"
 
+[build.env]
+PHP_VERSION = "8.3"
+
 [build.nixpacks]
-pkgs = ["php83", "php83Extensions.curl", "php83Extensions.mbstring", "php83Extensions.pdo", "php83Extensions.pdo_mysql", "php83Extensions.fileinfo", "php83Extensions.openssl", "php83Extensions.dom", "php83Extensions.xml", "php83Extensions.tokenizer", "php83Extensions.session"]
+packages = [
+    "php83",
+    "php83Extensions.curl",
+    "php83Extensions.mbstring",
+    "php83Extensions.pdo",
+    "php83Extensions.pdo_mysql",
+    "php83Extensions.fileinfo",
+    "php83Extensions.openssl",
+    "php83Extensions.dom",
+    "php83Extensions.xml",
+    "php83Extensions.tokenizer",
+    "php83Extensions.session",
+]
+
+[deploy]
+startCommand = "php artisan serve --host=0.0.0.0 --port=${PORT}"
