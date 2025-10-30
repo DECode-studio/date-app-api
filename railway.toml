@@ -1,6 +1,6 @@
 [build]
 builder = "nixpacks"
-buildCommand = "php artisan l5-swagger:generate || true"
+buildCommand = "php83 artisan l5-swagger:generate || true"
 
 [build.env]
 PHP_VERSION = "8.3"
@@ -11,7 +11,7 @@ packages = [
     "php83Extensions.curl",
     "php83Extensions.mbstring",
     "php83Extensions.pdo",
-    "php83Extensions.pdo_mysql",
+    "php83Extensions.pdo_pgsql",
     "php83Extensions.fileinfo",
     "php83Extensions.openssl",
     "php83Extensions.dom",
@@ -21,4 +21,4 @@ packages = [
 ]
 
 [deploy]
-startCommand = "mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs storage/api-docs && chmod -R 775 storage bootstrap/cache && php artisan config:clear || true && php artisan cache:clear || true && php artisan route:clear || true && php artisan view:clear || true && php artisan storage:link || true && php artisan l5-swagger:generate || true && php -S 0.0.0.0:${PORT} public/index.php"
+startCommand = "rm -f bootstrap/cache/*.php && chmod -R 777 storage bootstrap/cache && php83 -S 0.0.0.0:${PORT} -t public/"
