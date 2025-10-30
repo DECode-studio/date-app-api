@@ -10,5 +10,6 @@
             "src": "/(.*)",
             "dest": "/api/index.php"
         }
-    ]
+    ],
+    "ignoreCommand": "echo 'ignore node build'"
 }
