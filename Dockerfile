@@ -32,11 +32,14 @@ COPY . .
 # --------------------------------------------------------
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# ✅ Fix storage permissions
+# --------------------------------------------------------
+# ✅ Storage permissions + LOG FIX
+# --------------------------------------------------------
 RUN mkdir -p storage/framework/{cache,sessions,views} storage/logs \
-    && chmod -R 777 storage bootstrap/cache
+    && touch storage/logs/laravel.log \
+    && chmod -R 777 storage bootstrap/cache storage/logs
 
-# ✅ Forward logs
+# ✅ Forward logs to stdout (AFTER file exists)
 RUN ln -sf /dev/stdout storage/logs/laravel.log
 
 # ✅ Swagger
