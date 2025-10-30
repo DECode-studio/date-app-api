@@ -1,59 +1,110 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+## Date App API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Backend service for a dating-style recommendation app built with Laravel 12, JWT authentication, and Swagger documentation.
 
-## About Laravel
+**Maintainer:** Nur Wahid Azhar  
+**Email:** nur.wahid.azhar@gmail.com  
+**Portfolio:** https://porto-ku.excitech.id/user?id=nur.wahid.azhar
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+### Features
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- JWT-based authentication (register, login, logout, refresh, and profile lookup)
+- People recommendations with pagination and reaction state (like/dislike)
+- Liked-people listing for the authenticated user
+- Reaction counters cached on the `people` table
+- Hourly cronjob that emails an admin when a profile gathers more than 50 likes
+- Complete OpenAPI 3 docs via L5 Swagger
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Requirements
 
-## Learning Laravel
+- PHP 8.2+
+- Composer
+- Node 18+ (for asset pipeline, optional if you only hit APIs)
+- A database supported by Laravel (MySQL, PostgreSQL, SQLite, etc.)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+### Getting Started
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+1. Install dependencies:
+   ```bash
+   composer install
+   npm install # optional, only if you need the Vite assets
+   ```
 
-## Laravel Sponsors
+2. Configure environment:
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   php artisan jwt:secret
+   ```
+   Update database credentials and mail settings in `.env`. Set `ADMIN_EMAIL` (default `admin@example.com`) and optionally `POPULAR_PERSON_THRESHOLD`.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+3. Run database migrations and seeders:
+   ```bash
+   php artisan migrate --seed
+   ```
+   Seeds include a dummy account `test@example.com` / `password` and 21 female profiles.
 
-### Premium Partners
+4. Serve the API:
+   ```bash
+   php artisan serve
+   ```
+   Base URL defaults to `http://127.0.0.1:8000`.
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+5. (Optional) Start background workers:
+   - Queue: `php artisan queue:work` (mailer uses queued delivery)
+   - Scheduler: either set up `* * * * * php artisan schedule:run` in cron or use `php artisan schedule:work`.
 
-## Contributing
+### API Documentation
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Generate the OpenAPI spec and view Swagger UI:
 
-## Code of Conduct
+```bash
+php artisan l5-swagger:generate
+php artisan serve
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+- Swagger UI: `http://127.0.0.1:8000/api/documentation`
+- Raw JSON: `http://127.0.0.1:8000/api/documentation.json`
 
-## Security Vulnerabilities
+### Authentication Flow
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+1. `POST /api/auth/register` – create account, returns JWT
+2. `POST /api/auth/login` – authenticate with email/password, returns JWT
+3. `GET /api/auth/me` – fetch current user (Bearer token required)
+4. `POST /api/auth/logout` – invalidate current token
+5. `POST /api/auth/refresh` – refresh token before expiry
 
-## License
+Include `Authorization: Bearer <token>` on protected routes.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### People & Reactions
+
+| Method | Endpoint | Description |
+| ------ | -------- | ----------- |
+| GET | `/api/people` | Paginated recommended people |
+| GET | `/api/people/liked` | Paginated liked people for current user |
+| POST | `/api/people/{id}/like` | Like a person |
+| POST | `/api/people/{id}/dislike` | Dislike a person |
+
+Responses use the `PersonResource` payload documented in Swagger.
+
+### Cronjob & Notifications
+
+The command `notify:popular-people` runs hourly (configured in `bootstrap/app.php`) and:
+
+- Finds people with `likes_count >= POPULAR_PERSON_THRESHOLD`
+- Sends `App\Mail\PersonHitThreshold` to `ADMIN_EMAIL`
+- Sets `notified_at` to avoid duplicate messages
+
+To trigger manually:
+
+```bash
+php artisan notify:popular-people
+```
+
+### Testing
+
+```bash
+php artisan test
+```
+
+Configure a testing database in `.env.testing` if needed.
