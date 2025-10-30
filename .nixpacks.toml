@@ -1,8 +1,0 @@
-[phases.setup]
-nixPkgs = ["php83"]
-
-[phases.build]
-cmds = ["php83 artisan l5-swagger:generate || true"]
-
-[start]
-cmd = "php83 -S 0.0.0.0:${PORT} server.php"
