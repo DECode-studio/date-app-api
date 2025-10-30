@@ -1,0 +1,14 @@
+services:
+  date-app:
+    image: registry.gitlab.com/<NAMESPACE>/<PROJECT>:${TAG:-latest}
+    container_name: date-app
+    restart: unless-stopped
+    ports:
+      - "80:8080" # expose ke 80 server
+    working_dir: /var/www
+    volumes:
+      - /opt/date-app/.env:/var/www/.env:ro # <- .env buatanmu di server
+      - /opt/date-app/storage:/var/www/storage # agar storage persisten (opsional)
+    environment:
+      # optional tuning; Laravel akan pakai file .env yang dimount
+      PHP_OPCACHE_VALIDATE_TIMESTAMPS: "0"
