@@ -1,5 +1,6 @@
 [build]
 builder = "nixpacks"
+buildCommand = "php artisan l5-swagger:generate"
 
 [build.env]
 PHP_VERSION = "8.3"
@@ -20,4 +21,14 @@ packages = [
 ]
 
 [deploy]
-startCommand = "php artisan serve --host=0.0.0.0 --port=${PORT}"
+startCommand = """
+mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs storage/api-docs
+chmod -R 775 storage bootstrap/cache
+php artisan config:clear || true
+php artisan cache:clear || true
+php artisan route:clear || true
+php artisan view:clear || true
+php artisan storage:link || true
+php artisan l5-swagger:generate || true
+php artisan serve --host=0.0.0.0 --port=${PORT}
+"""
