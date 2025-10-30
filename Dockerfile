@@ -81,6 +81,8 @@ RUN echo "APP_NAME=${APP_NAME}" > .env && \
     echo "QUEUE_CONNECTION=${QUEUE_CONNECTION}" >> .env && \
     echo "FILESYSTEM_DISK=${FILESYSTEM_DISK}" >> .env
 
+RUN cat .env
+
 # --------------------------------------------------------
 # ✅ Install Laravel dependencies
 # --------------------------------------------------------
