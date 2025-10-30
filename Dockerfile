@@ -39,9 +39,6 @@ RUN mkdir -p storage/framework/{cache,sessions,views} storage/logs \
     && touch storage/logs/laravel.log \
     && chmod -R 777 storage bootstrap/cache storage/logs
 
-# ✅ Forward logs to stdout (AFTER file exists)
-RUN ln -sf /dev/stdout storage/logs/laravel.log
-
 # ✅ Swagger
 RUN php artisan l5-swagger:generate || true
 
