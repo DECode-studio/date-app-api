@@ -17,7 +17,7 @@ packages = [
     "php83Extensions.dom",
     "php83Extensions.xml",
     "php83Extensions.tokenizer",
-    "php83Extensions.session",
+    "php83Extensions.session"
 ]
 
 [deploy]
