@@ -1,5 +1,9 @@
+# --------------------------------------------------------
+# ✅ BASE IMAGE: PHP-FPM 8.3
+# --------------------------------------------------------
 FROM php:8.3-fpm
 
+# ✅ Install system dependencies
 RUN apt-get update && apt-get install -y \
     nginx \
     supervisor \
@@ -14,67 +18,20 @@ RUN apt-get update && apt-get install -y \
     nano \
     && docker-php-ext-install pdo pdo_pgsql mbstring zip xml
 
+# ✅ Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
+# --------------------------------------------------------
+# ✅ Set working directory
+# --------------------------------------------------------
 WORKDIR /var/www
 
+# ✅ Copy app files
 COPY . .
 
-ARG APP_NAME
-ARG APP_ENV
-ARG APP_KEY
-ARG APP_DEBUG
-ARG APP_URL
-ARG APP_LOCALE
-ARG APP_FALLBACK_LOCALE
-ARG APP_FAKER_LOCALE
-
-ARG DB_CONNECTION
-ARG DB_HOST
-ARG DB_PORT
-ARG DB_DATABASE
-ARG DB_USERNAME
-ARG DB_PASSWORD
-
-ARG LOG_CHANNEL
-ARG LOG_STACK
-ARG LOG_LEVEL
-
-ARG SESSION_DRIVER
-ARG SESSION_LIFETIME
-ARG SESSION_ENCRYPT
-ARG SESSION_PATH
-ARG SESSION_DOMAIN
-
-ARG BROADCAST_CONNECTION
-ARG FILESYSTEM_DISK
-ARG QUEUE_CONNECTION
-
-ARG CACHE_STORE
-ARG CACHE_PREFIX
-
-ARG MEMCACHED_HOST
-
-ARG REDIS_CLIENT
-ARG REDIS_HOST
-ARG REDIS_PASSWORD
-ARG REDIS_PORT
-
-ARG MAIL_MAILER
-ARG MAIL_SCHEME
-ARG MAIL_HOST
-ARG MAIL_PORT
-ARG MAIL_USERNAME
-ARG MAIL_PASSWORD
-ARG MAIL_FROM_ADDRESS
-ARG MAIL_FROM_NAME
-
-ARG AWS_ACCESS_KEY_ID
-ARG AWS_SECRET_ACCESS_KEY
-ARG AWS_DEFAULT_REGION
-ARG AWS_BUCKET
-ARG AWS_USE_PATH_STYLE_ENDPOINT
-
+# --------------------------------------------------------
+# ✅ Generate .env from runtime ENV (Railway injects these)
+# --------------------------------------------------------
 RUN echo "APP_NAME=${APP_NAME}" > .env && \
     echo "APP_ENV=${APP_ENV}" >> .env && \
     echo "APP_KEY=${APP_KEY}" >> .env && \
@@ -130,25 +87,42 @@ RUN echo "APP_NAME=${APP_NAME}" > .env && \
     echo "AWS_BUCKET=${AWS_BUCKET}" >> .env && \
     echo "AWS_USE_PATH_STYLE_ENDPOINT=${AWS_USE_PATH_STYLE_ENDPOINT}" >> .env
 
+# ✅ DEBUG: Show generated .env in build logs
+RUN echo "===== GENERATED .env =====" && cat .env
 
+# --------------------------------------------------------
+# ✅ Install Laravel dependencies
+# --------------------------------------------------------
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
+# ✅ Fix storage permissions
 RUN mkdir -p storage/framework/{cache,sessions,views} storage/logs \
     && chmod -R 777 storage bootstrap/cache
 
+# ✅ Redirect Laravel logs to stdout
 RUN ln -sf /dev/stdout storage/logs/laravel.log
 
+# ✅ Clear cache to force .env reload
 RUN php artisan config:clear || true \
     && php artisan cache:clear || true \
     && php artisan route:clear || true \
     && php artisan view:clear || true
 
+# ✅ Generate swagger
 RUN php artisan l5-swagger:generate || true
 
+# --------------------------------------------------------
+# ✅ Nginx + Supervisor configs
+# --------------------------------------------------------
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-
 COPY supervisor.conf /etc/supervisor/conf.d/supervisor.conf
 
+# --------------------------------------------------------
+# ✅ Expose Nginx port
+# --------------------------------------------------------
 EXPOSE 8080
 
+# --------------------------------------------------------
+# ✅ Launch Supervisor (runs PHP-FPM + Nginx)
+# --------------------------------------------------------
 CMD ["/usr/bin/supervisord", "-n"]
